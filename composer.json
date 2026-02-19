@@ -1,0 +1,95 @@
+{
+  "name": "chamber-orchestra/translation-bundle",
+  "type": "symfony-bundle",
+  "description": "Symfony bundle for multilingual entity localization and database-backed form field translations with XLIFF export.",
+  "keywords": [
+    "symfony",
+    "symfony-bundle",
+    "i18n",
+    "l10n",
+    "translation",
+    "localization",
+    "translatable",
+    "multilingual",
+    "doctrine",
+    "orm",
+    "xliff",
+    "intl"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Andrew Lukin",
+      "email": "lukin.andrej@gmail.com",
+      "homepage": "https://github.com/wtorsi",
+      "role": "Developer"
+    },
+    {
+      "name": "Girchenko Mikhail",
+      "email": "girchenkomikhail@gmail.com",
+      "homepage": "https://github.com/baldrys-ed",
+      "role": "Developer"
+    }
+  ],
+  "homepage": "https://github.com/chamber-orchestra/translation-bundle",
+  "support": {
+    "issues": "https://github.com/chamber-orchestra/translation-bundle/issues",
+    "source": "https://github.com/chamber-orchestra/translation-bundle"
+  },
+  "require": {
+    "php": "^8.5",
+    "chamber-orchestra/doctrine-clock-bundle": "^8.0",
+    "chamber-orchestra/doctrine-extensions-bundle": "^8.0",
+    "doctrine/orm": "^3.0",
+    "symfony/console": "^8.0",
+    "symfony/dependency-injection": "^8.0",
+    "symfony/doctrine-bridge": "^8.0",
+    "symfony/event-dispatcher": "^8.0",
+    "symfony/form": "^8.0",
+    "symfony/http-foundation": "^8.0",
+    "symfony/http-kernel": "^8.0",
+    "symfony/translation": "^8.0",
+    "symfony/uid": "^8.0",
+    "symfony/yaml": "^8.0"
+  },
+  "require-dev": {
+    "doctrine/doctrine-bundle": "^3.0",
+    "friendsofphp/php-cs-fixer": "^3.0",
+    "phpunit/phpunit": "^11.0",
+    "symfony/framework-bundle": "^8.0",
+    "symfony/lock": "^8.0",
+    "symfony/test-pack": "^1.0"
+  },
+  "suggest": {
+    "chamber-orchestra/cms-bundle": "CMS form integration: TranslationsType collection with per-locale Bootstrap nav tabs."
+  },
+  "autoload": {
+    "psr-4": {
+      "ChamberOrchestra\\TranslationBundle\\": ""
+    },
+    "exclude-from-classmap": [
+      "/tests/"
+    ]
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "config": {
+    "allow-plugins": {
+      "symfony/runtime": true
+    }
+  },
+  "extra": {
+    "symfony": {
+      "require": "^8.0"
+    }
+  },
+  "scripts": {
+    "test": "vendor/bin/phpunit",
+    "cs-fix": "vendor/bin/php-cs-fixer fix",
+    "cs-check": "vendor/bin/php-cs-fixer fix --dry-run --diff"
+  },
+  "minimum-stability": "dev"
+}

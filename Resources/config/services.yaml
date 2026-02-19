@@ -1,0 +1,32 @@
+parameters:
+    chamber_orchestra.translation_locales:
+        - ru
+        - en
+
+services:
+    _defaults:
+        autoconfigure: true
+        autowire: true
+        public: false
+
+    ChamberOrchestra\TranslationBundle\:
+        resource: '../../'
+        exclude:
+            - "../../{DependencyInjection,Resources,Exception,Entity}"
+            - "../../tests/**"
+            - "../../vendor/**"
+            - "../../var/**"
+
+    ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType:
+        arguments:
+            $locales: '%chamber_orchestra.translation_locales%'
+
+    ChamberOrchestra\TranslationBundle\EventSubscriber\TranslateSubscriber:
+        tags:
+            - {name: "doctrine.event_listener", event: "loadClassMetadata", priority: -128}
+            - {name: "doctrine.event_listener", event: "postLoad"}
+            - {name: "doctrine.event_listener", event: "prePersist"}
+
+    ChamberOrchestra\TranslationBundle\Command\ExportTranslationCommand:
+        arguments:
+            $translationsPath: '%translator.default_path%'

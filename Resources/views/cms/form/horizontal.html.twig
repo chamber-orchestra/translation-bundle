@@ -1,0 +1,47 @@
+{%- trans_default_domain 'cms' -%}
+
+{%- block translations_row -%}
+    {%- set widget_attr = {} -%}
+
+    {%- if help is defined and help is not empty -%}
+        {%- set widget_attr = {attr: {'aria-describedby': id ~"_help"}} -%}
+    {%- endif -%}
+    <div class="form-group position-relative {% if (not compound or force_error|default(false)) and not valid %} is-invalid{% endif %}">
+        {{- form_label(form, {}, {label_attr: {class: 'sr-only'}}) -}}
+        {{- form_widget(form, widget_attr) -}}
+        {{- form_help(form) -}}
+    </div>
+{%- endblock -%}
+
+{%- block translations_widget -%}
+    {%- apply spaceless -%}
+        {%- set attr = {
+            'data-collection': true,
+        } -%}
+        <ul class="nav nav-tabs ">
+            {%- for locale, entry in form -%}
+                <li class="nav-item">
+                    <a class="nav-link font-weight-bold text-uppercase {{ loop.first ? 'active' }}" {#
+                    #}id="{{ form.vars.id }}-{{ locale }}-tab" {#
+                    #}data-toggle="pill" {#
+                    #}href="#{{ form.vars.id }}-{{ locale }}" {#
+                    #}role="tab" {#
+                    #}aria-controls="home" {#
+                    #}aria-selected="{{ loop.first ? 'true' : 'false' }}">{{ locale }}</a>
+                </li>
+            {%- endfor -%}
+        </ul>
+
+        <div class="tab-content" id="{{ form.vars.id }}-tabs">
+            {%- for locale, entry in form -%}
+                <fieldset class="tab-pane fade p-3  {{ loop.first ? 'show active' }}" {#
+                #}id="{{ form.vars.id }}-{{ locale }}" {#
+                #}role="tabpanel" {#
+                #}aria-labelledby="{{ form.vars.id }}-{{ locale }}-tab">
+                    {{- form_widget(entry) -}}
+                    {{- form_errors(entry) -}}
+                </fieldset>
+            {%- endfor -%}
+        </div>
+    {%- endapply -%}
+{%- endblock translations_widget -%}
