@@ -27,3 +27,9 @@ services:
         arguments:
             $translationsPath: '%translator.default_path%'
             $locales: '%chamber_orchestra.translation_locales%'
+
+    ChamberOrchestra\TranslationBundle\Twig\TranslationLocalesExtension:
+        arguments:
+            $locales: '%chamber_orchestra.translation_locales%'
+        tags:
+            - { name: twig.extension }

@@ -1,0 +1,10 @@
+translation:
+  title: Translations
+  field:
+    domain: Domain
+    message: Key
+    value: Value
+    context: Context
+    exported: Exported
+  nav:
+    export: Export to files

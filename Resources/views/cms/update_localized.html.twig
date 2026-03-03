@@ -1,0 +1,17 @@
+{%- extends '@ChamberOrchestraCms/crud/update.html.twig' -%}
+
+{%- block form_inner -%}
+    <div class="mb-4">
+        <ul class="nav nav-tabs">
+            {%- for locale in translation_locales() -%}
+                <li class="nav-item">
+                    <a class="nav-link{% if app.request.locale == locale %} active{% endif %}"
+                       href="{{ path(app.request.attributes.get('_route'), app.request.attributes.get('_route_params')|merge({'_locale': locale})) }}">
+                        {{ locale|upper }}
+                    </a>
+                </li>
+            {%- endfor -%}
+        </ul>
+    </div>
+    {{- form_rest(form) -}}
+{%- endblock -%}
