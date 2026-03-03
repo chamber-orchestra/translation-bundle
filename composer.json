@@ -53,7 +53,14 @@
     "symfony/uid": "^8.0",
     "symfony/yaml": "^8.0"
   },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "git@github.com:chamber-orchestra/cms-bundle.git"
+    }
+  ],
   "require-dev": {
+    "chamber-orchestra/cms-bundle": "@dev",
     "doctrine/doctrine-bundle": "^3.0",
     "friendsofphp/php-cs-fixer": "^3.0",
     "phpunit/phpunit": "^11.0",

@@ -12,20 +12,10 @@ services:
     ChamberOrchestra\TranslationBundle\:
         resource: '../../'
         exclude:
-            - "../../{DependencyInjection,Resources,Exception,Entity}"
-            - "../../Cms/Form/Dto/**"
+            - "../../{DependencyInjection,Resources,Exception,Entity,Cms}"
             - "../../tests/**"
             - "../../vendor/**"
             - "../../var/**"
-
-    ChamberOrchestra\TranslationBundle\Cms\Controller\:
-        resource: '../../Cms/Controller'
-        public: true
-        tags: [ 'controller.service_arguments' ]
-
-    ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType:
-        arguments:
-            $locales: '%chamber_orchestra.translation_locales%'
 
     ChamberOrchestra\TranslationBundle\EventSubscriber\TranslateSubscriber:
         tags:

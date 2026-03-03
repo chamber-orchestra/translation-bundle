@@ -24,7 +24,7 @@ final class TranslationTest extends TestCase
     #[Test]
     public function createPopulatesAllFields(): void
     {
-        $translation = Translation::create($this->simpleKey, 'Hello', 'some context');
+        $translation = Translation::create($this->simpleKey, 'Hello', 'en', 'some context');
 
         self::assertSame('messages', $translation->getDomain());
         self::assertSame((string) $this->uuid, $translation->getMessage());
@@ -36,7 +36,7 @@ final class TranslationTest extends TestCase
     #[Test]
     public function createWithNullContextDefaultsToNull(): void
     {
-        $translation = Translation::create($this->simpleKey, 'Hello');
+        $translation = Translation::create($this->simpleKey, 'Hello', 'en');
 
         self::assertNull($translation->getContext());
     }
@@ -45,25 +45,25 @@ final class TranslationTest extends TestCase
     public function createWithPrefixedKeyStoresFullMessage(): void
     {
         $key = TranslationHelper::getLocalizationKey('cms', $this->uuid, 'form', 'title');
-        $translation = Translation::create($key, 'Title');
+        $translation = Translation::create($key, 'Title', 'en');
 
         self::assertSame('cms', $translation->getDomain());
         self::assertSame(\sprintf('form.title.%s', $this->uuid), $translation->getMessage());
     }
 
     #[Test]
-    public function createAssignsIdFromKey(): void
+    public function createAssignsId(): void
     {
-        $translation = Translation::create($this->simpleKey, 'value');
+        $translation = Translation::create($this->simpleKey, 'value', 'en');
 
-        // The entity id is the UUID extracted from the key.
-        self::assertTrue($this->uuid->equals($translation->getId()));
+        self::assertNotNull($translation->getId());
+        self::assertInstanceOf(Uuid::class, $translation->getId());
     }
 
     #[Test]
     public function updateChangesValue(): void
     {
-        $translation = Translation::create($this->simpleKey, 'original');
+        $translation = Translation::create($this->simpleKey, 'original', 'en');
         $translation->update('updated');
 
         self::assertSame('updated', $translation->getValue());
@@ -72,7 +72,7 @@ final class TranslationTest extends TestCase
     #[Test]
     public function updateDoesNotChangeOtherFields(): void
     {
-        $translation = Translation::create($this->simpleKey, 'original', 'ctx');
+        $translation = Translation::create($this->simpleKey, 'original', 'en', 'ctx');
         $translation->update('updated');
 
         self::assertSame('messages', $translation->getDomain());
@@ -82,7 +82,7 @@ final class TranslationTest extends TestCase
     #[Test]
     public function exportSetsExportedFlag(): void
     {
-        $translation = Translation::create($this->simpleKey, 'Hello');
+        $translation = Translation::create($this->simpleKey, 'Hello', 'en');
         self::assertFalse($translation->isExported());
 
         $translation->export();
@@ -93,7 +93,7 @@ final class TranslationTest extends TestCase
     #[Test]
     public function markAsNeedToExportClearsExportedFlag(): void
     {
-        $translation = Translation::create($this->simpleKey, 'Hello');
+        $translation = Translation::create($this->simpleKey, 'Hello', 'en');
         $translation->export();
         self::assertTrue($translation->isExported());
 
@@ -105,7 +105,7 @@ final class TranslationTest extends TestCase
     #[Test]
     public function exportAndMarkCycleWorks(): void
     {
-        $translation = Translation::create($this->simpleKey, 'Hello');
+        $translation = Translation::create($this->simpleKey, 'Hello', 'en');
 
         $translation->export();
         self::assertTrue($translation->isExported());

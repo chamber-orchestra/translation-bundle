@@ -84,7 +84,7 @@ class ExportTranslationCommand extends Command
     {
         $result = [];
         foreach ($nested as $key => $value) {
-            $fullKey = '' !== $prefix ? $prefix . '.' . $key : (string) $key;
+            $fullKey = '' !== $prefix ? $prefix.'.'.$key : (string) $key;
             if (\is_array($value)) {
                 $result = \array_merge($result, $this->flattenYaml($value, $fullKey));
             } else {

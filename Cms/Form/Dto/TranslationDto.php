@@ -9,8 +9,8 @@ use ChamberOrchestra\TranslationBundle\Entity\Translation;
 
 class TranslationDto extends AbstractDto
 {
-    public string|null $value = null;
-    public string|null $context = null;
+    public ?string $value = null;
+    public ?string $context = null;
 
     public function __construct()
     {

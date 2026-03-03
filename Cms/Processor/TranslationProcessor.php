@@ -30,7 +30,7 @@ class TranslationProcessor extends CrudProcessor
 
     public function update(DtoInterface $dto, object $entity): void
     {
-        /** @var Translation $entity */
+        /* @var Translation $entity */
         $entity->markAsNeedToExport();
         parent::update($dto, $entity);
     }

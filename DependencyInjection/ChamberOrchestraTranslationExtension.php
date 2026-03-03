@@ -15,5 +15,9 @@ class ChamberOrchestraTranslationExtension extends Extension
     {
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
+
+        if ($container->hasExtension('chamber_orchestra_cms')) {
+            $loader->load('services_cms.yaml');
+        }
     }
 }

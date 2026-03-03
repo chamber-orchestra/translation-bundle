@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Tests\Integrational;
 
 use ChamberOrchestra\DoctrineClockBundle\ChamberOrchestraDoctrineClockBundle;
+use ChamberOrchestra\MetadataBundle\ChamberOrchestraMetadataBundle;
+use ChamberOrchestra\PaginationBundle\ChamberOrchestraPaginationBundle;
 use ChamberOrchestra\TranslationBundle\ChamberOrchestraTranslationBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,7 +24,9 @@ final class TestKernel extends Kernel
         return [
             new FrameworkBundle(),
             new DoctrineBundle(),
+            new ChamberOrchestraMetadataBundle(),
             new ChamberOrchestraDoctrineClockBundle(),
+            new ChamberOrchestraPaginationBundle(),
             new ChamberOrchestraTranslationBundle(),
         ];
     }

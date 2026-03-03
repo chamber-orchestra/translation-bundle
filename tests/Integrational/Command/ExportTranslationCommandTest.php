@@ -25,6 +25,11 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
 
         $schemaTool = new SchemaTool($this->em);
+        try {
+            $schemaTool->dropSchema([$this->em->getClassMetadata(Translation::class)]);
+        } catch (\Throwable) {
+            // Table may not exist on first run
+        }
         $schemaTool->createSchema([
             $this->em->getClassMetadata(Translation::class),
         ]);
@@ -40,8 +45,8 @@ final class ExportTranslationCommandTest extends KernelTestCase
             $this->em->getClassMetadata(Translation::class),
         ]);
 
-        // Clean up any generated XLIFF files.
-        foreach (\glob($this->translationsDir.'/*.xliff') ?: [] as $file) {
+        // Clean up any generated YAML files.
+        foreach (\glob($this->translationsDir.'/*.yaml') ?: [] as $file) {
             @\unlink($file);
         }
 
@@ -70,7 +75,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
     {
         $uuid = Uuid::v7();
         $key = TranslationHelper::getLocalizationKey('messages', $uuid);
-        $translation = Translation::create($key, 'Hello, world!');
+        $translation = Translation::create($key, 'Hello, world!', 'ru');
 
         $this->em->persist($translation);
         $this->em->flush();
@@ -88,16 +93,16 @@ final class ExportTranslationCommandTest extends KernelTestCase
     {
         $uuid = Uuid::v7();
         $key = TranslationHelper::getLocalizationKey('messages', $uuid);
-        $translation = Translation::create($key, 'Exported value');
+        $translation = Translation::create($key, 'Exported value', 'ru');
 
         $this->em->persist($translation);
         $this->em->flush();
 
         $this->runCommand();
 
-        $xliffFile = $this->translationsDir.'/messages+intl-icu.ru.xliff';
-        self::assertFileExists($xliffFile);
-        self::assertStringContainsString('Exported value', \file_get_contents($xliffFile));
+        $yamlFile = $this->translationsDir.'/messages+intl-icu.ru.yaml';
+        self::assertFileExists($yamlFile);
+        self::assertStringContainsString('Exported value', \file_get_contents($yamlFile));
     }
 
     #[Test]
@@ -109,10 +114,12 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $pending = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid1),
             'Pending value',
+            'ru',
         );
         $alreadyExported = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid2),
             'Already exported',
+            'ru',
         );
         $alreadyExported->export();
 
@@ -139,10 +146,12 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $messagesTranslation = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid1),
             'Hello',
+            'ru',
         );
         $validatorsTranslation = Translation::create(
             TranslationHelper::getLocalizationKey('validators', $uuid2),
             'Required field',
+            'ru',
         );
 
         $this->em->persist($messagesTranslation);
@@ -151,8 +160,8 @@ final class ExportTranslationCommandTest extends KernelTestCase
 
         $this->runCommand();
 
-        self::assertFileExists($this->translationsDir.'/messages+intl-icu.ru.xliff');
-        self::assertFileExists($this->translationsDir.'/validators+intl-icu.ru.xliff');
+        self::assertFileExists($this->translationsDir.'/messages+intl-icu.ru.yaml');
+        self::assertFileExists($this->translationsDir.'/validators+intl-icu.ru.yaml');
     }
 
     #[Test]
@@ -163,25 +172,27 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $first = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid1),
             'First value',
+            'ru',
         );
         $this->em->persist($first);
         $this->em->flush();
         $this->runCommand();
 
-        $xliffFile = $this->translationsDir.'/messages+intl-icu.ru.xliff';
-        self::assertFileExists($xliffFile);
+        $yamlFile = $this->translationsDir.'/messages+intl-icu.ru.yaml';
+        self::assertFileExists($yamlFile);
 
         // Second run: export another translation.
         $uuid2 = Uuid::v7();
         $second = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid2),
             'Second value',
+            'ru',
         );
         $this->em->persist($second);
         $this->em->flush();
         $this->runCommand();
 
-        $content = \file_get_contents($xliffFile);
+        $content = \file_get_contents($yamlFile);
         self::assertStringContainsString('First value', $content);
         self::assertStringContainsString('Second value', $content);
     }

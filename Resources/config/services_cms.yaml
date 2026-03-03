@@ -1,0 +1,22 @@
+services:
+    _defaults:
+        autoconfigure: true
+        autowire: true
+        public: false
+
+    ChamberOrchestra\TranslationBundle\Cms\Controller\:
+        resource: '../../Cms/Controller'
+        public: true
+        tags: [ 'controller.service_arguments' ]
+
+    ChamberOrchestra\TranslationBundle\Cms\Processor\:
+        resource: '../../Cms/Processor'
+
+    ChamberOrchestra\TranslationBundle\Cms\Form\:
+        resource: '../../Cms/Form'
+        exclude:
+            - '../../Cms/Form/Dto/**'
+
+    ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType:
+        arguments:
+            $locales: '%chamber_orchestra.translation_locales%'

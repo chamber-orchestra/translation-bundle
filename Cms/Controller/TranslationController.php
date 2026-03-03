@@ -41,7 +41,7 @@ class TranslationController extends AbstractCrudController
                 'fields' => [
                     'domain',
                     'message',
-                    'value' => fn (string|null $v): string|null => $v ? (string) (new UnicodeString($v))->truncate(60, '...') : null,
+                    'value' => fn (?string $v): ?string => $v ? (string) (new UnicodeString($v))->truncate(60, '...') : null,
                     'context',
                     'exported',
                 ],
