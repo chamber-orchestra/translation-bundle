@@ -1,0 +1,3 @@
+cms_translation:
+    resource: "../../../Cms/Controller/TranslationController.php"
+    type: attribute

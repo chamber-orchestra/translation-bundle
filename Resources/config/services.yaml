@@ -13,9 +13,15 @@ services:
         resource: '../../'
         exclude:
             - "../../{DependencyInjection,Resources,Exception,Entity}"
+            - "../../Cms/Form/Dto/**"
             - "../../tests/**"
             - "../../vendor/**"
             - "../../var/**"
+
+    ChamberOrchestra\TranslationBundle\Cms\Controller\:
+        resource: '../../Cms/Controller'
+        public: true
+        tags: [ 'controller.service_arguments' ]
 
     ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType:
         arguments:
