@@ -40,6 +40,7 @@
     "php": "^8.5",
     "chamber-orchestra/doctrine-clock-bundle": "^8.0",
     "chamber-orchestra/doctrine-extensions-bundle": "^8.0",
+    "chamber-orchestra/pagination-bundle": "^8.0",
     "doctrine/orm": "^3.0",
     "symfony/console": "^8.0",
     "symfony/dependency-injection": "^8.0",
