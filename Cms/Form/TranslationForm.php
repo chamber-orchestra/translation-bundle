@@ -36,7 +36,7 @@ class TranslationForm extends AbstractType
             ->add('context', TextType::class, [
                 'required' => false,
                 'constraints' => [
-                    new Length(['max' => 512]),
+                    new Length(max: 512),
                 ],
             ]);
     }
