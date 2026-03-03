@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace ChamberOrchestra\TranslationBundle\DependencyInjection;
 
-use ChamberOrchestra\CmsBundle\Generator\CsvGeneratorInterface;
+use ChamberOrchestra\CmsBundle\Controller\AbstractCrudController;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
@@ -17,7 +17,7 @@ class ChamberOrchestraTranslationExtension extends Extension
         $loader = new YamlFileLoader($container, new FileLocator(__DIR__.'/../Resources/config'));
         $loader->load('services.yaml');
 
-        if (\class_exists(CsvGeneratorInterface::class)) {
+        if (\class_exists(AbstractCrudController::class)) {
             $loader->load('services_cms.yaml');
         }
     }
