@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace ChamberOrchestra\TranslationBundle\Entity;
 
-use ChamberOrchestra\DoctrineClockBundle\Contracts\Entity\TimestampCreateInterface;
 use ChamberOrchestra\DoctrineClockBundle\Entity\TimestampCreateTrait;
 use ChamberOrchestra\DoctrineExtensionsBundle\Entity\IdTrait;
 use ChamberOrchestra\TranslationBundle\Repository\TranslationRepository;
@@ -15,7 +14,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: TranslationRepository::class)]
 #[ORM\Cache(usage: 'NONSTRICT_READ_WRITE')]
 #[ORM\ChangeTrackingPolicy(value: 'DEFERRED_EXPLICIT')]
-class Translation implements TimestampCreateInterface
+class Translation
 {
     use IdTrait;
     use TimestampCreateTrait;
