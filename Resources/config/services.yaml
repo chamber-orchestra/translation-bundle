@@ -30,3 +30,4 @@ services:
     ChamberOrchestra\TranslationBundle\Command\ExportTranslationCommand:
         arguments:
             $translationsPath: '%translator.default_path%'
+            $locales: '%chamber_orchestra.translation_locales%'

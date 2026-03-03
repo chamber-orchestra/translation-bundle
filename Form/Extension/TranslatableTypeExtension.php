@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ChamberOrchestra\TranslationBundle\Form\Extension;
 
 use ChamberOrchestra\CmsBundle\Form\Type\WysiwygType;
+use ChamberOrchestra\TranslationBundle\Contracts\Provider\LocaleProviderInterface;
 use ChamberOrchestra\TranslationBundle\Events\TranslationEvent;
 use ChamberOrchestra\TranslationBundle\Form\Loader\LocalizationLoaderChain;
 use ChamberOrchestra\TranslationBundle\Form\Loader\LocalizationLoaderInterface;
@@ -27,6 +28,7 @@ class TranslatableTypeExtension extends AbstractTypeExtension
     public function __construct(
         private readonly LocalizationLoaderChain $loader,
         private readonly EventDispatcherInterface $dispatcher,
+        private readonly LocaleProviderInterface $localeProvider,
     ) {
     }
 
@@ -76,7 +78,11 @@ class TranslatableTypeExtension extends AbstractTypeExtension
                 $value = $event->getData();
                 $event->setData($key);
 
-                $this->dispatcher->dispatch(new TranslationEvent($key, $value, $this->getContext($event, $options)));
+                $locale = $this->localeProvider->provideCurrentLocale()
+                    ?? $this->localeProvider->provideFallbackLocale()
+                    ?? 'en';
+
+                $this->dispatcher->dispatch(new TranslationEvent($key, $value, $locale, $this->getContext($event, $options)));
                 $event->stopPropagation();
             });
         }

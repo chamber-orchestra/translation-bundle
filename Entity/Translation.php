@@ -14,6 +14,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: TranslationRepository::class)]
 #[ORM\Cache(usage: 'NONSTRICT_READ_WRITE')]
 #[ORM\ChangeTrackingPolicy(value: 'DEFERRED_EXPLICIT')]
+#[ORM\UniqueConstraint(name: 'translation_message_locale_uniq', columns: ['message', 'locale'])]
 class Translation
 {
     use IdTrait;
@@ -23,6 +24,8 @@ class Translation
     private string $domain;
     #[ORM\Column(type: 'string', length: 128, nullable: false)]
     private string $message;
+    #[ORM\Column(type: 'string', length: 32, nullable: false)]
+    private string $locale;
     #[ORM\Column(type: 'text', nullable: false)]
     private string $value;
     #[ORM\Column(type: 'string', length: 512, nullable: true)]
@@ -30,21 +33,23 @@ class Translation
     #[ORM\Column(type: 'boolean', nullable: false)]
     private bool $exported = false;
 
-    public function __construct(Uuid $id, string $domain, string $message, string $value, ?string $context = null)
+    public function __construct(Uuid $id, string $domain, string $message, string $locale, string $value, ?string $context = null)
     {
         $this->id = $id;
         $this->domain = $domain;
         $this->message = $message;
+        $this->locale = $locale;
         $this->value = $value;
         $this->context = $context;
     }
 
-    public static function create(string $key, string $value, ?string $context = null): self
+    public static function create(string $key, string $value, string $locale, ?string $context = null): self
     {
         return new self(
-            TranslationHelper::getId($key),
+            Uuid::v7(),
             TranslationHelper::getDomain($key),
             TranslationHelper::getMessage($key),
+            $locale,
             $value,
             $context,
         );
@@ -78,6 +83,11 @@ class Translation
     public function getMessage(): string
     {
         return $this->message;
+    }
+
+    public function getLocale(): string
+    {
+        return $this->locale;
     }
 
     public function getContext(): ?string

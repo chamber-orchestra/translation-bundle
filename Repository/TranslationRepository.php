@@ -17,12 +17,15 @@ class TranslationRepository extends ServiceEntityRepository
         parent::__construct($registry, Translation::class);
     }
 
-    public function findOneByKey(string $key): ?Translation
+    public function findOneByKey(string $key, string $locale): ?Translation
     {
         if (!Uuid::isValid(TranslationHelper::parseId($key))) {
             return null;
         }
 
-        return $this->find(TranslationHelper::getId($key));
+        return $this->findOneBy([
+            'message' => TranslationHelper::getMessage($key),
+            'locale' => $locale,
+        ]);
     }
 }

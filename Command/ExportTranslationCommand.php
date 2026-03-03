@@ -23,33 +23,34 @@ class ExportTranslationCommand extends Command
         private readonly EventDispatcherInterface $dispatcher,
         private readonly string $translationsPath,
         private readonly EntityManagerInterface $em,
+        private readonly array $locales,
     ) {
         parent::__construct();
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $locale = 'ru';
-
         $er = $this->em->getRepository(Translation::class);
-        $grouped = $this->groupByDomain($er->findBy(['exported' => false]));
+        $grouped = $this->groupByDomainAndLocale($er->findBy(['exported' => false]));
 
         $this->em->beginTransaction();
         try {
-            foreach ($grouped as $domain => $translations) {
-                $file = \sprintf('%s/%s+intl-icu.%s.yaml', $this->translationsPath, $domain, $locale);
-                $existing = \file_exists($file) ? (Yaml::parseFile($file) ?? []) : [];
-                $flat = $this->flattenYaml($existing);
+            foreach ($grouped as $domain => $byLocale) {
+                foreach ($byLocale as $locale => $translations) {
+                    $file = \sprintf('%s/%s+intl-icu.%s.yaml', $this->translationsPath, $domain, $locale);
+                    $existing = \file_exists($file) ? (Yaml::parseFile($file) ?? []) : [];
+                    $flat = $this->flattenYaml($existing);
 
-                foreach ($translations as $translation) {
-                    $key = TranslationHelper::getLocalizationKey($domain, Uuid::fromString($translation->getMessage()));
-                    $flat[$key] = $translation->getValue();
+                    foreach ($translations as $translation) {
+                        $key = TranslationHelper::getLocalizationKey($domain, Uuid::fromString($translation->getMessage()));
+                        $flat[$key] = $translation->getValue();
 
-                    $translation->export();
-                    $this->em->persist($translation);
+                        $translation->export();
+                        $this->em->persist($translation);
+                    }
+
+                    \file_put_contents($file, Yaml::dump($this->toNested($flat), 10, 2));
                 }
-
-                \file_put_contents($file, Yaml::dump($this->toNested($flat), 10, 2));
             }
             $this->em->flush();
             $this->em->commit();
@@ -63,12 +64,17 @@ class ExportTranslationCommand extends Command
         return self::SUCCESS;
     }
 
-    private function groupByDomain(array $translations): array
+    /**
+     * @param Translation[] $translations
+     *
+     * @return array<string, array<string, Translation[]>>
+     */
+    private function groupByDomainAndLocale(array $translations): array
     {
         $grouped = [];
 
         foreach ($translations as $translation) {
-            $grouped[$translation->getDomain()][] = $translation;
+            $grouped[$translation->getDomain()][$translation->getLocale()][] = $translation;
         }
 
         return $grouped;
