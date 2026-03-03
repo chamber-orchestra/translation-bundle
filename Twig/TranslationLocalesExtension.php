@@ -11,12 +11,13 @@ class TranslationLocalesExtension extends AbstractExtension
 {
     public function __construct(
         private readonly array $locales,
-    ) {}
+    ) {
+    }
 
     public function getFunctions(): array
     {
         return [
-            new TwigFunction('translation_locales', fn() => $this->locales),
+            new TwigFunction('translation_locales', fn () => $this->locales),
         ];
     }
 }
