@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Integrational;
 
 use ChamberOrchestra\CmsBundle\Generator\CsvGeneratorInterface;
+use ChamberOrchestra\CmsBundle\Processor\Instantiator;
 use ChamberOrchestra\CmsBundle\Processor\Utils\CrudUtils;
 use ChamberOrchestra\DoctrineClockBundle\ChamberOrchestraDoctrineClockBundle;
 use ChamberOrchestra\MetadataBundle\ChamberOrchestraMetadataBundle;
@@ -89,6 +90,10 @@ final class TestKernel extends Kernel
 
         $container->services()
             ->set(CrudUtils::class)
+            ->synthetic();
+
+        $container->services()
+            ->set(Instantiator::class)
             ->synthetic();
     }
 
