@@ -45,7 +45,7 @@ class TranslationController extends AbstractCrudController
                     'context',
                     'exported',
                 ],
-                'orderBy' => ['createdDatetime' => 'DESC'],
+                'orderBy' => ['exported' => 'ASC', 'createdDatetime' => 'DESC'],
                 'filter' => TranslationFilterForm::class,
             ],
             'label_format' => 'translation.field.%name%',

@@ -23,6 +23,7 @@ use Symfony\Component\Uid\Uuid;
 class TranslatableTypeExtension extends AbstractTypeExtension
 {
     private const HOLDER = 'localization/map';
+    /** @var array<string, array{key: string, existing: bool}> */
     private array $map = [];
 
     public function __construct(
@@ -64,8 +65,10 @@ class TranslatableTypeExtension extends AbstractTypeExtension
                  * Reuse the existing key if passed.
                  */
                 $id = $event->getForm()->getConfig()->getAttribute(self::HOLDER);
-                $key = $this->map[$id] = $event->getData() ?: $this->generateLocalizationKey($event, $options);
-                if ($event->getData()) {
+                $existing = (bool) $event->getData();
+                $key = $existing ? $event->getData() : $this->generateLocalizationKey($event, $options);
+                $this->map[$id] = ['key' => $key, 'existing' => $existing];
+                if ($existing) {
                     $event->setData($options['localization_loader']->load($key));
                 }
                 $event->stopPropagation();
@@ -73,9 +76,19 @@ class TranslatableTypeExtension extends AbstractTypeExtension
 
             $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) use ($options): void {
                 $id = $event->getForm()->getConfig()->getAttribute(self::HOLDER);
-                $key = $this->map[$id];
+                ['key' => $key, 'existing' => $existing] = $this->map[$id];
 
-                $value = $event->getData();
+                $value = $this->normalizeValue($event->getData());
+
+                // Empty value on a field that never had a key: leave the entity field null,
+                // do not generate a translation key and do not create a Translation record.
+                if ('' === $value && !$existing) {
+                    $event->setData(null);
+                    $event->stopPropagation();
+
+                    return;
+                }
+
                 $event->setData($key);
 
                 $locale = $this->localeProvider->provideCurrentLocale()
@@ -86,6 +99,21 @@ class TranslatableTypeExtension extends AbstractTypeExtension
                 $event->stopPropagation();
             });
         }
+    }
+
+    private function normalizeValue(?string $value): string
+    {
+        if (null === $value) {
+            return '';
+        }
+
+        // TinyMCE inserts <p><br data-mce-bogus="1"></p> as a placeholder for an empty editor.
+        // Treat this specific pattern as an empty string so it is not persisted as a translation.
+        if (\preg_match('/^\s*<p[^>]*>\s*<br[^>]+data-mce-bogus[^>]*>\s*<\/p>\s*$/i', $value)) {
+            return '';
+        }
+
+        return $value;
     }
 
     private function generateLocalizationKey(FormEvent $event, array $options): string

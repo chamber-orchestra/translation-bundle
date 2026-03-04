@@ -33,6 +33,9 @@ class TranslationEventSubscriber
         }
 
         if (null === $translation) {
+            if ('' === $event->value) {
+                return;
+            }
             $translation = Translation::create($event->key, $event->value, $event->locale, $event->context);
         } else {
             $translation->update($event->value);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Integrational;
 
+use ChamberOrchestra\CmsBundle\Generator\CsvGeneratorInterface;
 use ChamberOrchestra\DoctrineClockBundle\ChamberOrchestraDoctrineClockBundle;
 use ChamberOrchestra\MetadataBundle\ChamberOrchestraMetadataBundle;
 use ChamberOrchestra\PaginationBundle\ChamberOrchestraPaginationBundle;
@@ -78,6 +79,12 @@ final class TestKernel extends Kernel
         $container->services()
             ->alias('test.translation.export_command', 'ChamberOrchestra\TranslationBundle\Command\ExportTranslationCommand')
             ->public();
+
+        // Stub CsvGeneratorInterface so the CMS TranslationController can be compiled
+        // without pulling in the full cms-bundle service stack.
+        $container->services()
+            ->set(CsvGeneratorInterface::class)
+            ->synthetic();
     }
 
     public function getProjectDir(): string
