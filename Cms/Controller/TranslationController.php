@@ -51,9 +51,9 @@ class TranslationController extends AbstractCrudController
             ],
             'label_format' => 'translation.field.%name%',
             'title' => 'translation.title',
-            'nav' => static function (MenuBuilder $root): void {
+            'nav' => function (MenuBuilder $root): void {
                 $root->add('cms_translation_export', [
-                    'label' => 'translation.nav.export',
+                    'label' => $this->translator->trans('translation.nav.export', [], 'cms'),
                     'route' => 'cms_translation_export',
                 ]);
             },
