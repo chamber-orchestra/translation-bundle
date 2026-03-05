@@ -40,8 +40,6 @@ class TranslationProcessor extends CrudProcessor
         $app = new Application($this->kernel);
         $app->setAutoExit(false);
 
-        foreach (['translation:export', 'cache:warmup'] as $command) {
-            $app->run(new ArrayInput(['command' => $command]), new NullOutput());
-        }
+        $app->run(new ArrayInput(['command' => 'translation:export']), new NullOutput());
     }
 }
