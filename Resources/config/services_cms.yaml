@@ -1,3 +1,9 @@
+parameters:
+    # Shell command to restart PHP workers after export (runs after response via kernel.terminate).
+    # Leave empty to skip restart (translations take effect on next server restart).
+    # Example: 'XDG_RUNTIME_DIR=/run/user/1000 systemctl --user restart frankenphp-myapp'
+    chamber_orchestra.translation.worker_restart_command: ''
+
 services:
     _defaults:
         autoconfigure: true
@@ -16,6 +22,13 @@ services:
         resource: '../../Cms/Form'
         exclude:
             - '../../Cms/Form/Dto/**'
+
+    ChamberOrchestra\TranslationBundle\Cms\EventSubscriber\:
+        resource: '../../Cms/EventSubscriber'
+
+    ChamberOrchestra\TranslationBundle\Cms\EventSubscriber\WorkerRestartSubscriber:
+        arguments:
+            $workerRestartCommand: '%chamber_orchestra.translation.worker_restart_command%'
 
     ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType:
         class: ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType
