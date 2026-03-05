@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace ChamberOrchestra\TranslationBundle\Cms\EventSubscriber;
 
-use Symfony\Bundle\FrameworkBundle\Console\Application;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\KernelInterface;
@@ -43,10 +40,11 @@ class WorkerRestartSubscriber implements EventSubscriberInterface
 
         $this->scheduled = false;
 
-        $app = new Application($this->kernel);
-        $app->setAutoExit(false);
-        $app->run(new ArrayInput(['command' => 'cache:warmup']), new NullOutput());
+        $projectDir = $this->kernel->getProjectDir();
+        $uid = \function_exists('posix_getuid') ? \posix_getuid() : 1000;
+        $xdgRuntime = \getenv('XDG_RUNTIME_DIR') ?: "/run/user/{$uid}";
+        $console = "{$projectDir}/bin/console";
 
-        \shell_exec($this->workerRestartCommand.' 2>/dev/null &');
+        \shell_exec("XDG_RUNTIME_DIR={$xdgRuntime} {$console} cache:warmup 2>/dev/null && XDG_RUNTIME_DIR={$xdgRuntime} {$this->workerRestartCommand} 2>/dev/null &");
     }
 }
