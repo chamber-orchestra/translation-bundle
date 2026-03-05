@@ -34,21 +34,28 @@ class WorkerRestartSubscriber implements EventSubscriberInterface
 
     public function onTerminate(): void
     {
+        $projectDir = $this->kernel->getProjectDir();
+        $logFile = "{$projectDir}/var/log/translation_restart.log";
+
+        \file_put_contents(
+            $logFile,
+            \date('Y-m-d H:i:s')." onTerminate called. scheduled={$this->scheduled} command={$this->workerRestartCommand}\n",
+            \FILE_APPEND,
+        );
+
         if (!$this->scheduled || '' === $this->workerRestartCommand) {
             return;
         }
 
         $this->scheduled = false;
 
-        $projectDir = $this->kernel->getProjectDir();
         $uid = \function_exists('posix_getuid') ? \posix_getuid() : 1000;
         $xdgRuntime = \getenv('XDG_RUNTIME_DIR') ?: "/run/user/{$uid}";
         $console = "{$projectDir}/bin/console";
-        $logFile = "{$projectDir}/var/log/translation_restart.log";
 
         $cmd = "XDG_RUNTIME_DIR={$xdgRuntime} {$console} cache:warmup 2>&1 && XDG_RUNTIME_DIR={$xdgRuntime} {$this->workerRestartCommand} 2>&1";
         $output = \shell_exec($cmd);
 
-        \file_put_contents($logFile, \date('Y-m-d H:i:s')." uid={$uid} xdg={$xdgRuntime}\ncmd: {$cmd}\noutput: {$output}\n---\n", \FILE_APPEND);
+        \file_put_contents($logFile, "cmd: {$cmd}\noutput: {$output}\n---\n", \FILE_APPEND);
     }
 }
