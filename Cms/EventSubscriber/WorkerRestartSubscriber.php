@@ -53,7 +53,7 @@ class WorkerRestartSubscriber implements EventSubscriberInterface
         $xdgRuntime = \getenv('XDG_RUNTIME_DIR') ?: "/run/user/{$uid}";
         $console = "{$projectDir}/bin/console";
 
-        $cmd = "XDG_RUNTIME_DIR={$xdgRuntime} {$console} cache:warmup 2>&1 && XDG_RUNTIME_DIR={$xdgRuntime} {$this->workerRestartCommand} 2>&1";
+        $cmd = "XDG_RUNTIME_DIR={$xdgRuntime} {$console} cache:clear --no-warmup 2>&1 && XDG_RUNTIME_DIR={$xdgRuntime} {$console} cache:warmup 2>&1 && XDG_RUNTIME_DIR={$xdgRuntime} {$this->workerRestartCommand} 2>&1";
         $output = \shell_exec($cmd);
 
         \file_put_contents($logFile, "cmd: {$cmd}\noutput: {$output}\n---\n", \FILE_APPEND);
