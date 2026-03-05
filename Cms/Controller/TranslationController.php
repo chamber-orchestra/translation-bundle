@@ -8,6 +8,7 @@ use ChamberOrchestra\CmsBundle\Controller\AbstractCrudController;
 use ChamberOrchestra\CmsBundle\Controller\SupportsDeleteOperation;
 use ChamberOrchestra\CmsBundle\Controller\SupportsListOperation;
 use ChamberOrchestra\CmsBundle\Controller\SupportsUpdateOperation;
+use ChamberOrchestra\MenuBundle\Menu\MenuBuilder;
 use ChamberOrchestra\TranslationBundle\Cms\Form\Dto\TranslationDto;
 use ChamberOrchestra\TranslationBundle\Cms\Form\TranslationFilterForm;
 use ChamberOrchestra\TranslationBundle\Cms\Form\TranslationForm;
@@ -50,6 +51,12 @@ class TranslationController extends AbstractCrudController
             ],
             'label_format' => 'translation.field.%name%',
             'title' => 'translation.title',
+            'nav' => static function (MenuBuilder $root): void {
+                $root->add('cms_translation_export', [
+                    'label' => 'translation.nav.export',
+                    'route' => 'cms_translation_export',
+                ]);
+            },
         ]);
     }
 

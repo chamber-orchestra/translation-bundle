@@ -17,7 +17,11 @@ services:
         exclude:
             - '../../Cms/Form/Dto/**'
 
+    ChamberOrchestra\TranslationBundle\Cms\EventSubscriber\:
+        resource: '../../Cms/EventSubscriber'
+
     ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType:
         class: ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType
         arguments:
             $locales: '%chamber_orchestra.translation_locales%'
+
