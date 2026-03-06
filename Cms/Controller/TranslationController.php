@@ -9,7 +9,6 @@ use ChamberOrchestra\CmsBundle\Controller\SupportsDeleteOperation;
 use ChamberOrchestra\CmsBundle\Controller\SupportsListOperation;
 use ChamberOrchestra\CmsBundle\Controller\SupportsUpdateOperation;
 use ChamberOrchestra\MenuBundle\Menu\MenuBuilder;
-use ChamberOrchestra\TranslationBundle\Cms\EventSubscriber\WorkerRestartSubscriber;
 use ChamberOrchestra\TranslationBundle\Cms\Form\Dto\TranslationDto;
 use ChamberOrchestra\TranslationBundle\Cms\Form\TranslationFilterForm;
 use ChamberOrchestra\TranslationBundle\Cms\Form\TranslationForm;
@@ -28,10 +27,8 @@ class TranslationController extends AbstractCrudController
     use SupportsUpdateOperation;
     use SupportsDeleteOperation;
 
-    public function __construct(
-        TranslationProcessor $processor,
-        private readonly WorkerRestartSubscriber $restartSubscriber,
-    ) {
+    public function __construct(TranslationProcessor $processor)
+    {
         parent::__construct($processor, [
             'class' => Translation::class,
             'form_class' => TranslationForm::class,
@@ -69,10 +66,6 @@ class TranslationController extends AbstractCrudController
         /** @var TranslationProcessor $processor */
         $processor = $this->processor;
         $processor->export();
-
-        if ($this->restartSubscriber->isConfigured()) {
-            $this->restartSubscriber->schedule();
-        }
 
         return $this->redirectToRoute('cms_translation_index');
     }
