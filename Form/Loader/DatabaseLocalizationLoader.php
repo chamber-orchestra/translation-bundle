@@ -18,7 +18,8 @@ final class DatabaseLocalizationLoader implements LocalizationLoaderInterface
     public function __construct(
         private readonly TranslationRepository $repository,
         private readonly LocaleProviderInterface $localeProvider,
-    ) {}
+    ) {
+    }
 
     public function load(string $key): ?string
     {

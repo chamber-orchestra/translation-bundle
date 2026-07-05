@@ -53,7 +53,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
         parent::tearDown();
     }
 
-    private function runCommand(): int
+    private function executeExportCommand(): int
     {
         $application = new Application(self::$kernel);
         $application->setAutoExit(false);
@@ -65,7 +65,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
     #[Test]
     public function commandSucceedsWithNoUnexportedTranslations(): void
     {
-        $exitCode = $this->runCommand();
+        $exitCode = $this->executeExportCommand();
 
         self::assertSame(0, $exitCode);
     }
@@ -82,7 +82,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
 
         self::assertFalse($translation->isExported());
 
-        $this->runCommand();
+        $this->executeExportCommand();
         $this->em->refresh($translation);
 
         self::assertTrue($translation->isExported());
@@ -98,7 +98,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $this->em->persist($translation);
         $this->em->flush();
 
-        $this->runCommand();
+        $this->executeExportCommand();
 
         $yamlFile = $this->translationsDir.'/messages+intl-icu.ru.yaml';
         self::assertFileExists($yamlFile);
@@ -127,7 +127,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $this->em->persist($alreadyExported);
         $this->em->flush();
 
-        $this->runCommand();
+        $this->executeExportCommand();
         $this->em->refresh($pending);
         $this->em->refresh($alreadyExported);
 
@@ -158,7 +158,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $this->em->persist($validatorsTranslation);
         $this->em->flush();
 
-        $this->runCommand();
+        $this->executeExportCommand();
 
         self::assertFileExists($this->translationsDir.'/messages+intl-icu.ru.yaml');
         self::assertFileExists($this->translationsDir.'/validators+intl-icu.ru.yaml');
@@ -176,7 +176,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
         );
         $this->em->persist($first);
         $this->em->flush();
-        $this->runCommand();
+        $this->executeExportCommand();
 
         $yamlFile = $this->translationsDir.'/messages+intl-icu.ru.yaml';
         self::assertFileExists($yamlFile);
@@ -190,7 +190,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
         );
         $this->em->persist($second);
         $this->em->flush();
-        $this->runCommand();
+        $this->executeExportCommand();
 
         $content = \file_get_contents($yamlFile);
         self::assertStringContainsString('First value', $content);

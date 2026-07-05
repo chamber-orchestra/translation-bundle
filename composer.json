@@ -38,20 +38,20 @@
   },
   "require": {
     "php": "^8.5",
-    "chamber-orchestra/doctrine-clock-bundle": "^8.0",
-    "chamber-orchestra/doctrine-extensions-bundle": "^8.0",
+    "chamber-orchestra/doctrine-clock-bundle": "8.1.*",
+    "chamber-orchestra/doctrine-extensions-bundle": "8.1.*",
     "chamber-orchestra/pagination-bundle": "^8.0",
     "doctrine/orm": "^3.0",
-    "symfony/console": "^8.0",
-    "symfony/dependency-injection": "^8.0",
-    "symfony/doctrine-bridge": "^8.0",
-    "symfony/event-dispatcher": "^8.0",
-    "symfony/form": "^8.0",
-    "symfony/http-foundation": "^8.0",
-    "symfony/http-kernel": "^8.0",
-    "symfony/translation": "^8.0",
-    "symfony/uid": "^8.0",
-    "symfony/yaml": "^8.0"
+    "symfony/console": "8.1.*",
+    "symfony/dependency-injection": "8.1.*",
+    "symfony/doctrine-bridge": "8.1.*",
+    "symfony/event-dispatcher": "8.1.*",
+    "symfony/form": "8.1.*",
+    "symfony/http-foundation": "8.1.*",
+    "symfony/http-kernel": "8.1.*",
+    "symfony/translation": "8.1.*",
+    "symfony/uid": "8.1.*",
+    "symfony/yaml": "8.1.*"
   },
   "repositories": [
     {
@@ -64,8 +64,8 @@
     "doctrine/doctrine-bundle": "^3.0",
     "friendsofphp/php-cs-fixer": "^3.0",
     "phpunit/phpunit": "^11.0",
-    "symfony/framework-bundle": "^8.0",
-    "symfony/lock": "^8.0",
+    "symfony/framework-bundle": "8.1.*",
+    "symfony/lock": "8.1.*",
     "symfony/test-pack": "^1.0"
   },
   "suggest": {
@@ -91,7 +91,7 @@
   },
   "extra": {
     "symfony": {
-      "require": "^8.0"
+      "require": "8.1.*"
     }
   },
   "scripts": {
