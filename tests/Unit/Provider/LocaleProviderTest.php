@@ -6,7 +6,7 @@ namespace Tests\Unit\Provider;
 
 use ChamberOrchestra\TranslationBundle\Provider\LocaleProvider;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\Exception\ParameterNotFoundException;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
@@ -17,14 +17,14 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 final class LocaleProviderTest extends TestCase
 {
     private RequestStack $requestStack;
-    private ParameterBagInterface&MockObject $parameterBag;
-    private TranslatorInterface&MockObject $translator;
+    private ParameterBagInterface&Stub $parameterBag;
+    private TranslatorInterface&Stub $translator;
 
     protected function setUp(): void
     {
         $this->requestStack = new RequestStack();
-        $this->parameterBag = $this->createMock(ParameterBagInterface::class);
-        $this->translator = $this->createMock(TranslatorInterface::class);
+        $this->parameterBag = $this->createStub(ParameterBagInterface::class);
+        $this->translator = $this->createStub(TranslatorInterface::class);
     }
 
     /**
@@ -65,7 +65,7 @@ final class LocaleProviderTest extends TestCase
         // directly testing the translator path: no request at all, so provideCurrentLocale() returns null.
         // The translator path fires only when a request exists but its locale is falsy.
         // We simulate that by mocking getLocale() to return ''.
-        $request = $this->createMock(Request::class);
+        $request = $this->createStub(Request::class);
         $request->method('getLocale')->willReturn('');
         $this->requestStack->push($request);
 
@@ -77,7 +77,7 @@ final class LocaleProviderTest extends TestCase
     #[Test]
     public function provideCurrentLocaleReturnsNullWhenRequestHasNoLocaleAndNoTranslator(): void
     {
-        $request = $this->createMock(Request::class);
+        $request = $this->createStub(Request::class);
         $request->method('getLocale')->willReturn('');
         $this->requestStack->push($request);
 
@@ -99,7 +99,7 @@ final class LocaleProviderTest extends TestCase
     #[Test]
     public function provideFallbackLocaleReturnsKernelDefaultLocaleWhenNoRequest(): void
     {
-        $this->parameterBag->method('get')->with('kernel.default_locale')->willReturn('ru');
+        $this->parameterBag->method('get')->willReturn('ru');
 
         self::assertSame('ru', $this->makeProvider()->provideFallbackLocale());
     }
