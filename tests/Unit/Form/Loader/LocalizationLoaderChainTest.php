@@ -14,10 +14,10 @@ final class LocalizationLoaderChainTest extends TestCase
     #[Test]
     public function returnsFirstNonNullValue(): void
     {
-        $loaderA = $this->createMock(LocalizationLoaderInterface::class);
+        $loaderA = $this->createStub(LocalizationLoaderInterface::class);
         $loaderA->method('load')->willReturn(null);
 
-        $loaderB = $this->createMock(LocalizationLoaderInterface::class);
+        $loaderB = $this->createStub(LocalizationLoaderInterface::class);
         $loaderB->method('load')->willReturn('translated value');
 
         $loaderC = $this->createMock(LocalizationLoaderInterface::class);
@@ -31,10 +31,10 @@ final class LocalizationLoaderChainTest extends TestCase
     #[Test]
     public function fallsBackToKeyWhenAllLoadersReturnNull(): void
     {
-        $loaderA = $this->createMock(LocalizationLoaderInterface::class);
+        $loaderA = $this->createStub(LocalizationLoaderInterface::class);
         $loaderA->method('load')->willReturn(null);
 
-        $loaderB = $this->createMock(LocalizationLoaderInterface::class);
+        $loaderB = $this->createStub(LocalizationLoaderInterface::class);
         $loaderB->method('load')->willReturn(null);
 
         $chain = new LocalizationLoaderChain([$loaderA, $loaderB]);
@@ -61,7 +61,7 @@ final class LocalizationLoaderChainTest extends TestCase
     #[Test]
     public function firstLoaderTakesPriorityOverSecond(): void
     {
-        $loaderA = $this->createMock(LocalizationLoaderInterface::class);
+        $loaderA = $this->createStub(LocalizationLoaderInterface::class);
         $loaderA->method('load')->willReturn('from A');
 
         $loaderB = $this->createMock(LocalizationLoaderInterface::class);
