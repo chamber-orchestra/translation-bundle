@@ -5,7 +5,7 @@
 A Symfony 8 bundle for multilingual applications. Provides two complementary i18n systems:
 
 1. **Entity localization** — multi-locale Doctrine entity pairs with automatic ORM relationship mapping at runtime.
-2. **Form field localization** — database-backed translation keys for individual form fields with XLIFF export.
+2. **Form field localization** — database-backed translation keys for individual form fields with YAML export.
 
 ## Features
 
@@ -13,8 +13,9 @@ A Symfony 8 bundle for multilingual applications. Provides two complementary i18
 - **Locale fallback chain** in `translate()`: requested locale → language fallback (`en_US` → `en`) → kernel default locale.
 - **`TranslatableProxyTrait`** for transparent property delegation: `$post->title` reads from the current translation without extra calls.
 - **Form field localization** via `localization: true` on `TextType`, `TextareaType`, and `WysiwygType` — stores opaque UUID-based keys in the entity, displays human-readable values in the form.
-- **`LocalizationLoaderChain`** — tagged, prioritized loader chain for resolving existing translation values; extend with custom loaders.
-- **`ExportTranslationCommand`** (`translation:export`) — writes un-exported `Translation` records to `+intl-icu.{locale}.xliff` files grouped by domain, then marks them as exported.
+- **Built-in `TranslationEventSubscriber`** — automatically creates or updates `Translation` entities when a localized form field is submitted.
+- **`LocalizationLoaderChain`** — tagged, prioritized loader chain for resolving translation values when rendering a localized form field; extend with custom loaders.
+- **`ExportTranslationCommand`** (`translation:export`) — writes un-exported `Translation` records to `{domain}+intl-icu.{locale}.yaml` files grouped by domain, marks them as exported, and dispatches `TranslationExportedEvent`.
 - **CMS integration** (optional, requires `chamber-orchestra/cms-bundle`) — `TranslationsType` collection pre-populated per locale, rendered as Bootstrap nav tabs.
 
 ## Requirements
@@ -161,8 +162,8 @@ class ServiceType extends AbstractType
         $builder
             ->add('name', TextType::class, [
                 'localization' => true,
-                'localization_domain' => 'messages',   // default: 'messages'
-                'localization_context' => ['ui' => 'service_name'], // optional, passed to TranslationEvent
+                'localization_domain' => 'entity',   // default: 'entity'
+                'localization_context' => 'service', // optional
             ])
             ->add('description', TextareaType::class, [
                 'localization' => true,
@@ -171,56 +172,87 @@ class ServiceType extends AbstractType
 }
 ```
 
-**What happens on submit:**
+#### How it works
 
-1. `TranslatableTypeExtension` dispatches a `TranslationEvent(key, value, context)`.
-2. Your listener persists the `Translation` entity:
+**On render (PRE_SET_DATA):**
+- If the entity field is `null` (new record) — a new `entity@{uuid}` key is generated but not yet stored; if the user submits empty, the field stays `null` and nothing is persisted.
+- If the entity field already has a key — `LocalizationLoaderChain` resolves it to a human-readable value for display.
 
-```php
-use ChamberOrchestra\TranslationBundle\Events\TranslationEvent;
-use ChamberOrchestra\TranslationBundle\Entity\Translation;
-use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+**On submit (PRE_SUBMIT):**
+- `TranslatableTypeExtension` dispatches `TranslationEvent(key, value, locale, context)`.
+- The built-in `TranslationEventSubscriber` creates or updates the `Translation` entity in the database and marks it as needing export (`exported = false`).
+- The entity field stores the opaque key, not the text.
 
-#[AsEventListener]
-final class TranslationPersistListener
-{
-    public function __construct(private readonly EntityManagerInterface $em) {}
+#### Reading translations: two paths
 
-    public function __invoke(TranslationEvent $event): void
-    {
-        $translation = Translation::create($event->key, $event->value, $event->context);
-        $this->em->persist($translation);
-    }
-}
+| Consumer | Mechanism | Source |
+|----------|-----------|--------|
+| CMS form render | `LocalizationLoaderChain` | Configurable — see loaders below |
+| Public site (`\|trans` Twig filter) | Symfony `Translator` | YAML catalog built by `cache:warmup` |
+
+The public site uses the standard Twig `trans` filter:
+```twig
+{{ entity.name|trans([], 'entity') }}
 ```
 
-3. The entity stores the key (`messages@name.{uuid}`), not the human-readable text. Symfony's translator resolves it at render time once exported.
+This reads from the Symfony translation catalog (compiled from YAML), **not** from the database. A `translation:export` + `cache:warmup` cycle is required for changes to appear on the public site.
 
-**Export stored translations to XLIFF:**
+#### Exporting to YAML
 
 ```bash
 php bin/console translation:export
 ```
 
-Writes `{domain}+intl-icu.{locale}.xliff` files to `%translator.default_path%`, marks records as exported, and dispatches `TranslationExportedEvent`.
+Reads all `Translation` records with `exported = false`, writes them to:
+```
+{translations_path}/{domain}+intl-icu.{locale}.yaml
+```
+marks them as exported, and dispatches `TranslationExportedEvent`.
 
-**Translation key format:**
+**Recommended deploy integration** — run export before `cache:warmup` so new values are compiled into the catalog immediately:
+
+```bash
+# In your deploy script, after stopping workers:
+php bin/console translation:export
+php bin/console cache:clear --no-warmup
+php bin/console cache:warmup
+# Start workers — they boot with the fresh catalog.
+```
+
+#### TranslationExportedEvent
+
+Dispatched after a successful export. Handle it in your application to perform any post-export actions (e.g., notifying external systems):
+
+```php
+use ChamberOrchestra\TranslationBundle\Events\TranslationExportedEvent;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+
+#[AsEventListener(TranslationExportedEvent::class)]
+class MyExportListener
+{
+    public function __invoke(TranslationExportedEvent $event): void
+    {
+        // e.g. notify a CDN, trigger a webhook, etc.
+    }
+}
+```
+
+#### Translation key format
 
 ```
-{domain}@[prefix.]uuid
+{domain}@{uuid}
 ```
 
 ```php
 use ChamberOrchestra\TranslationBundle\Utils\TranslationHelper;
 use Symfony\Component\Uid\Uuid;
 
-$uuid = Uuid::v7();
-$key  = TranslationHelper::getLocalizationKey('messages', $uuid, 'service');
-// → "messages@service.{uuid}"
+$key = TranslationHelper::getLocalizationKey('entity', Uuid::v7());
+// → "entity@{uuid}"
 
-TranslationHelper::getDomain($key);  // "messages"
-TranslationHelper::getId($key);      // Uuid instance
-TranslationHelper::getMessage($key); // "service.{uuid}"
+TranslationHelper::getDomain($key);  // "entity"
+TranslationHelper::getMessage($key); // "{uuid}"
+TranslationHelper::parseId($key);    // "{uuid}" string
 ```
 
 ---
@@ -254,26 +286,43 @@ parameters:
 
 ### Custom Localization Loaders
 
-Implement `LocalizationLoaderInterface` and tag the service with `chamber_orchestra.localization_loader`. The `LocalizationLoaderChain` resolves existing translations by priority:
+Implement `LocalizationLoaderInterface` and tag the service with `localization.loader`. The `LocalizationLoaderChain` tries loaders in descending priority order, returning the first non-`null` result.
+
+**Default loader** (`DefaultLocalizationLoader`, priority 0) reads from the Symfony translator (YAML catalog). This means the CMS form shows the last exported value, not the latest saved value.
+
+**Recommended: add a DB loader** (priority > 0) so CMS forms always show the current database value without requiring an export:
 
 ```php
+use ChamberOrchestra\TranslationBundle\Contracts\Provider\LocaleProviderInterface;
 use ChamberOrchestra\TranslationBundle\Form\Loader\LocalizationLoaderInterface;
+use ChamberOrchestra\TranslationBundle\Repository\TranslationRepository;
+use Symfony\Component\DependencyInjection\Attribute\AsTaggedItem;
+use Symfony\Component\DependencyInjection\Attribute\Autoconfigure;
 
-final class DatabaseLocalizationLoader implements LocalizationLoaderInterface
+#[Autoconfigure(tags: ['localization.loader'])]
+#[AsTaggedItem(priority: 10)]
+class DbLocalizationLoader implements LocalizationLoaderInterface
 {
+    public function __construct(
+        private readonly TranslationRepository $repository,
+        private readonly LocaleProviderInterface $localeProvider,
+    ) {}
+
     public function load(string $key): ?string
     {
-        // Return the human-readable value for this key, or null to pass through.
+        $locale = $this->localeProvider->provideCurrentLocale()
+            ?? $this->localeProvider->provideFallbackLocale()
+            ?? 'en';
+
+        return $this->repository->findOneByKey($key, $locale)?->getValue();
+        // Returns null if not found → chain falls through to DefaultLocalizationLoader
     }
 }
 ```
 
-```yaml
-# config/services.yaml
-App\Localization\DatabaseLocalizationLoader:
-    tags:
-        - { name: chamber_orchestra.localization_loader, priority: 10 }
-```
+With this loader the CMS form reflects the saved value immediately after submit, while the public site only updates after export + `cache:warmup`.
+
+---
 
 ## Testing
 

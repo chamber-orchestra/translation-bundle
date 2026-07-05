@@ -4,7 +4,12 @@ declare(strict_types=1);
 
 namespace Tests\Integrational;
 
+use ChamberOrchestra\CmsBundle\Generator\CsvGeneratorInterface;
+use ChamberOrchestra\CmsBundle\Processor\Instantiator;
+use ChamberOrchestra\CmsBundle\Processor\Utils\CrudUtils;
 use ChamberOrchestra\DoctrineClockBundle\ChamberOrchestraDoctrineClockBundle;
+use ChamberOrchestra\MetadataBundle\ChamberOrchestraMetadataBundle;
+use ChamberOrchestra\PaginationBundle\ChamberOrchestraPaginationBundle;
 use ChamberOrchestra\TranslationBundle\ChamberOrchestraTranslationBundle;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,7 +27,9 @@ final class TestKernel extends Kernel
         return [
             new FrameworkBundle(),
             new DoctrineBundle(),
+            new ChamberOrchestraMetadataBundle(),
             new ChamberOrchestraDoctrineClockBundle(),
+            new ChamberOrchestraPaginationBundle(),
             new ChamberOrchestraTranslationBundle(),
         ];
     }
@@ -74,6 +81,20 @@ final class TestKernel extends Kernel
         $container->services()
             ->alias('test.translation.export_command', 'ChamberOrchestra\TranslationBundle\Command\ExportTranslationCommand')
             ->public();
+
+        // Stub cms-bundle services so the CMS layer compiles without the full
+        // cms-bundle service stack.
+        $container->services()
+            ->set(CsvGeneratorInterface::class)
+            ->synthetic();
+
+        $container->services()
+            ->set(CrudUtils::class)
+            ->synthetic();
+
+        $container->services()
+            ->set(Instantiator::class)
+            ->synthetic();
     }
 
     public function getProjectDir(): string

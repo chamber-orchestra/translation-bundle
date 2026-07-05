@@ -27,6 +27,11 @@ final class TranslationRepositoryTest extends KernelTestCase
         $this->repository = $repository;
 
         $schemaTool = new SchemaTool($this->em);
+        try {
+            $schemaTool->dropSchema([$this->em->getClassMetadata(Translation::class)]);
+        } catch (\Throwable) {
+            // Table may not exist on first run
+        }
         $schemaTool->createSchema([
             $this->em->getClassMetadata(Translation::class),
         ]);
@@ -47,13 +52,13 @@ final class TranslationRepositoryTest extends KernelTestCase
     {
         $uuid = Uuid::v7();
         $key = TranslationHelper::getLocalizationKey('messages', $uuid);
-        $translation = Translation::create($key, 'Hello');
+        $translation = Translation::create($key, 'Hello', 'en');
 
         $this->em->persist($translation);
         $this->em->flush();
         $this->em->clear();
 
-        $found = $this->repository->findOneByKey($key);
+        $found = $this->repository->findOneByKey($key, 'en');
 
         self::assertNotNull($found);
         self::assertSame('Hello', $found->getValue());
@@ -65,7 +70,7 @@ final class TranslationRepositoryTest extends KernelTestCase
         $uuid = Uuid::v7();
         $key = TranslationHelper::getLocalizationKey('messages', $uuid);
 
-        self::assertNull($this->repository->findOneByKey($key));
+        self::assertNull($this->repository->findOneByKey($key, 'en'));
     }
 
     #[Test]
@@ -73,7 +78,7 @@ final class TranslationRepositoryTest extends KernelTestCase
     {
         $invalidKey = 'messages@not-a-valid-uuid';
 
-        self::assertNull($this->repository->findOneByKey($invalidKey));
+        self::assertNull($this->repository->findOneByKey($invalidKey, 'en'));
     }
 
     #[Test]
@@ -81,13 +86,13 @@ final class TranslationRepositoryTest extends KernelTestCase
     {
         $uuid = Uuid::v7();
         $key = TranslationHelper::getLocalizationKey('cms', $uuid, 'form', 'title');
-        $translation = Translation::create($key, 'My Title');
+        $translation = Translation::create($key, 'My Title', 'en');
 
         $this->em->persist($translation);
         $this->em->flush();
         $this->em->clear();
 
-        $found = $this->repository->findOneByKey($key);
+        $found = $this->repository->findOneByKey($key, 'en');
 
         self::assertNotNull($found);
         self::assertSame('My Title', $found->getValue());
@@ -102,10 +107,12 @@ final class TranslationRepositoryTest extends KernelTestCase
         $pending = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid1),
             'pending',
+            'en',
         );
         $exported = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid2),
             'exported',
+            'en',
         );
         $exported->export();
 

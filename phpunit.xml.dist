@@ -14,7 +14,7 @@
         <server name="SHELL_VERBOSITY" value="-1"/>
         <server name="KERNEL_CLASS" value="Tests\Integrational\TestKernel"/>
         <!-- Override with DATABASE_URL env var in CI, e.g. postgresql://user:pass@host/db -->
-        <env name="DATABASE_URL" value="postgresql://boris:seledko92@127.0.0.1:5432/mustinvest?serverVersion=17&amp;charset=utf8" force="false"/>
+        <env name="DATABASE_URL" value="postgresql://boris:seledko92@127.0.0.1:5432/translation_test?serverVersion=17&amp;charset=utf8" force="false"/>
     </php>
     <testsuites>
         <testsuite name="Unit">

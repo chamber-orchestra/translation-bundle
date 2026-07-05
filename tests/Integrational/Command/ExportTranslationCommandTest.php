@@ -25,6 +25,11 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
 
         $schemaTool = new SchemaTool($this->em);
+        try {
+            $schemaTool->dropSchema([$this->em->getClassMetadata(Translation::class)]);
+        } catch (\Throwable) {
+            // Table may not exist on first run
+        }
         $schemaTool->createSchema([
             $this->em->getClassMetadata(Translation::class),
         ]);
@@ -40,15 +45,15 @@ final class ExportTranslationCommandTest extends KernelTestCase
             $this->em->getClassMetadata(Translation::class),
         ]);
 
-        // Clean up any generated XLIFF files.
-        foreach (\glob($this->translationsDir.'/*.xliff') ?: [] as $file) {
+        // Clean up any generated YAML files.
+        foreach (\glob($this->translationsDir.'/*.yaml') ?: [] as $file) {
             @\unlink($file);
         }
 
         parent::tearDown();
     }
 
-    private function runCommand(): int
+    private function executeExportCommand(): int
     {
         $application = new Application(self::$kernel);
         $application->setAutoExit(false);
@@ -60,7 +65,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
     #[Test]
     public function commandSucceedsWithNoUnexportedTranslations(): void
     {
-        $exitCode = $this->runCommand();
+        $exitCode = $this->executeExportCommand();
 
         self::assertSame(0, $exitCode);
     }
@@ -70,14 +75,14 @@ final class ExportTranslationCommandTest extends KernelTestCase
     {
         $uuid = Uuid::v7();
         $key = TranslationHelper::getLocalizationKey('messages', $uuid);
-        $translation = Translation::create($key, 'Hello, world!');
+        $translation = Translation::create($key, 'Hello, world!', 'ru');
 
         $this->em->persist($translation);
         $this->em->flush();
 
         self::assertFalse($translation->isExported());
 
-        $this->runCommand();
+        $this->executeExportCommand();
         $this->em->refresh($translation);
 
         self::assertTrue($translation->isExported());
@@ -88,16 +93,16 @@ final class ExportTranslationCommandTest extends KernelTestCase
     {
         $uuid = Uuid::v7();
         $key = TranslationHelper::getLocalizationKey('messages', $uuid);
-        $translation = Translation::create($key, 'Exported value');
+        $translation = Translation::create($key, 'Exported value', 'ru');
 
         $this->em->persist($translation);
         $this->em->flush();
 
-        $this->runCommand();
+        $this->executeExportCommand();
 
-        $xliffFile = $this->translationsDir.'/messages+intl-icu.ru.xliff';
-        self::assertFileExists($xliffFile);
-        self::assertStringContainsString('Exported value', \file_get_contents($xliffFile));
+        $yamlFile = $this->translationsDir.'/messages+intl-icu.ru.yaml';
+        self::assertFileExists($yamlFile);
+        self::assertStringContainsString('Exported value', \file_get_contents($yamlFile));
     }
 
     #[Test]
@@ -109,10 +114,12 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $pending = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid1),
             'Pending value',
+            'ru',
         );
         $alreadyExported = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid2),
             'Already exported',
+            'ru',
         );
         $alreadyExported->export();
 
@@ -120,7 +127,7 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $this->em->persist($alreadyExported);
         $this->em->flush();
 
-        $this->runCommand();
+        $this->executeExportCommand();
         $this->em->refresh($pending);
         $this->em->refresh($alreadyExported);
 
@@ -139,20 +146,22 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $messagesTranslation = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid1),
             'Hello',
+            'ru',
         );
         $validatorsTranslation = Translation::create(
             TranslationHelper::getLocalizationKey('validators', $uuid2),
             'Required field',
+            'ru',
         );
 
         $this->em->persist($messagesTranslation);
         $this->em->persist($validatorsTranslation);
         $this->em->flush();
 
-        $this->runCommand();
+        $this->executeExportCommand();
 
-        self::assertFileExists($this->translationsDir.'/messages+intl-icu.ru.xliff');
-        self::assertFileExists($this->translationsDir.'/validators+intl-icu.ru.xliff');
+        self::assertFileExists($this->translationsDir.'/messages+intl-icu.ru.yaml');
+        self::assertFileExists($this->translationsDir.'/validators+intl-icu.ru.yaml');
     }
 
     #[Test]
@@ -163,25 +172,27 @@ final class ExportTranslationCommandTest extends KernelTestCase
         $first = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid1),
             'First value',
+            'ru',
         );
         $this->em->persist($first);
         $this->em->flush();
-        $this->runCommand();
+        $this->executeExportCommand();
 
-        $xliffFile = $this->translationsDir.'/messages+intl-icu.ru.xliff';
-        self::assertFileExists($xliffFile);
+        $yamlFile = $this->translationsDir.'/messages+intl-icu.ru.yaml';
+        self::assertFileExists($yamlFile);
 
         // Second run: export another translation.
         $uuid2 = Uuid::v7();
         $second = Translation::create(
             TranslationHelper::getLocalizationKey('messages', $uuid2),
             'Second value',
+            'ru',
         );
         $this->em->persist($second);
         $this->em->flush();
-        $this->runCommand();
+        $this->executeExportCommand();
 
-        $content = \file_get_contents($xliffFile);
+        $content = \file_get_contents($yamlFile);
         self::assertStringContainsString('First value', $content);
         self::assertStringContainsString('Second value', $content);
     }

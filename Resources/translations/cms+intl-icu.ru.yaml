@@ -1,0 +1,10 @@
+translation:
+  title: Переводы
+  field:
+    domain: Домен
+    message: Ключ
+    value: Значение
+    context: Контекст
+    exported: Экспортировано
+  nav:
+    export: Экспорт в файлы

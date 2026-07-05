@@ -12,14 +12,10 @@ services:
     ChamberOrchestra\TranslationBundle\:
         resource: '../../'
         exclude:
-            - "../../{DependencyInjection,Resources,Exception,Entity}"
+            - "../../{DependencyInjection,Resources,Exception,Entity,Cms}"
             - "../../tests/**"
             - "../../vendor/**"
             - "../../var/**"
-
-    ChamberOrchestra\TranslationBundle\Cms\Form\Type\TranslationsType:
-        arguments:
-            $locales: '%chamber_orchestra.translation_locales%'
 
     ChamberOrchestra\TranslationBundle\EventSubscriber\TranslateSubscriber:
         tags:
@@ -30,3 +26,10 @@ services:
     ChamberOrchestra\TranslationBundle\Command\ExportTranslationCommand:
         arguments:
             $translationsPath: '%translator.default_path%'
+            $locales: '%chamber_orchestra.translation_locales%'
+
+    ChamberOrchestra\TranslationBundle\Twig\TranslationLocalesExtension:
+        arguments:
+            $locales: '%chamber_orchestra.translation_locales%'
+        tags:
+            - { name: twig.extension }

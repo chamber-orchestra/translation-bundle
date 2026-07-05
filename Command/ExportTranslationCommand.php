@@ -13,10 +13,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Symfony\Component\Translation\Dumper\XliffFileDumper;
-use Symfony\Component\Translation\Loader\XliffFileLoader;
-use Symfony\Component\Translation\MessageCatalogue;
 use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Yaml\Yaml;
 
 #[AsCommand(name: 'translation:export')]
 class ExportTranslationCommand extends Command
@@ -25,43 +23,34 @@ class ExportTranslationCommand extends Command
         private readonly EventDispatcherInterface $dispatcher,
         private readonly string $translationsPath,
         private readonly EntityManagerInterface $em,
+        private readonly array $locales,
     ) {
         parent::__construct();
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $ext = 'xliff';
-        $version = '2.0';
-        $locale = 'ru';
-        $options = ['xliff_version' => $version];
-        $dumper = new XliffFileDumper($ext);
-
         $er = $this->em->getRepository(Translation::class);
-        $grouped = $this->groupByDomain($er->findBy(['exported' => false]));
-        /* @var Translation $translation */
+        $grouped = $this->groupByDomainAndLocale($er->findBy(['exported' => false]));
+
         $this->em->beginTransaction();
         try {
-            foreach ($grouped as $domain => $translations) {
-                $file = \sprintf('%s/%s+intl-icu.ru.xliff', $this->translationsPath, $domain);
-                if (\file_exists($file)) {
-                    $catalogue = (new XliffFileLoader())->load($file, $locale, $domain);
-                } else {
-                    $catalogue = new MessageCatalogue($locale);
-                }
-                foreach ($translations as $translation) {
-                    $id = TranslationHelper::getLocalizationKey($domain, Uuid::fromString($translation->getMessage()));
-                    $value = $translation->getValue();
-                    $context = $translation->getContext();
-                    $notes = ['notes' => [['category' => 'context', 'content' => $context]]];
-                    $catalogue->set($id, $value, $domain);
-                    $catalogue->setMetadata($id, $notes, $domain);
+            foreach ($grouped as $domain => $byLocale) {
+                foreach ($byLocale as $locale => $translations) {
+                    $file = \sprintf('%s/%s+intl-icu.%s.yaml', $this->translationsPath, $domain, $locale);
+                    $existing = \file_exists($file) ? (Yaml::parseFile($file) ?? []) : [];
+                    $flat = $this->flattenYaml($existing);
 
-                    $translation->export();
-                    $this->em->persist($translation);
+                    foreach ($translations as $translation) {
+                        $key = TranslationHelper::getLocalizationKey($domain, Uuid::fromString($translation->getMessage()));
+                        $flat[$key] = $translation->getValue();
+
+                        $translation->export();
+                        $this->em->persist($translation);
+                    }
+
+                    \file_put_contents($file, Yaml::dump($this->toNested($flat), 10, 2));
                 }
-                $dump = $dumper->formatCatalogue($catalogue, $domain, $options);
-                \file_put_contents($file, $dump);
             }
             $this->em->flush();
             $this->em->commit();
@@ -75,15 +64,52 @@ class ExportTranslationCommand extends Command
         return self::SUCCESS;
     }
 
-    private function groupByDomain(array $translations): array
+    /**
+     * @param Translation[] $translations
+     *
+     * @return array<string, array<string, Translation[]>>
+     */
+    private function groupByDomainAndLocale(array $translations): array
     {
         $grouped = [];
 
-        /* @var Translation $translation */
         foreach ($translations as $translation) {
-            $grouped[$translation->getDomain()][] = $translation;
+            $grouped[$translation->getDomain()][$translation->getLocale()][] = $translation;
         }
 
         return $grouped;
+    }
+
+    private function flattenYaml(array $nested, string $prefix = ''): array
+    {
+        $result = [];
+        foreach ($nested as $key => $value) {
+            $fullKey = '' !== $prefix ? $prefix.'.'.$key : (string) $key;
+            if (\is_array($value)) {
+                $result = \array_merge($result, $this->flattenYaml($value, $fullKey));
+            } else {
+                $result[$fullKey] = $value;
+            }
+        }
+
+        return $result;
+    }
+
+    private function toNested(array $flat): array
+    {
+        $result = [];
+        foreach ($flat as $key => $value) {
+            $parts = \explode('.', (string) $key);
+            $ref = &$result;
+            foreach ($parts as $part) {
+                if (!\array_key_exists($part, $ref) || !\is_array($ref[$part])) {
+                    $ref[$part] = [];
+                }
+                $ref = &$ref[$part];
+            }
+            $ref = $value;
+        }
+
+        return $result;
     }
 }

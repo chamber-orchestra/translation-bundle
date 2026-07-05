@@ -11,6 +11,7 @@ class TranslationEvent extends Event
     public function __construct(
         public readonly string $key,
         public readonly string $value,
+        public readonly string $locale,
         public readonly ?string $context = null,
     ) {
     }
